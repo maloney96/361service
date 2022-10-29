@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const axios = require("axios");
 
 const {
   PORT,
@@ -30,45 +31,64 @@ app.listen(PORT, () => {
   );
 });
 
+const logBuddy = (obj) => {
+  console.error(obj);
+  return obj;
+};
+
 /*  lat: String - End user's latitude.
     lon: String - End user's longitude. */
-const getWeather = (lat, lon) =>
-  fetch(
-    `https://pro.openweathermap.org/data/2.5/forecast/hourly?lat=${lat}&lon=${lon}&appid=${weatherbitAccessKey}`
-  )
-    .then((response) => response.json())
-    .catch((error) => ({
-      error: error,
-      message: "An error was encountered while retrieving your weather data.",
-    }));
+const getWeather = (lat, lon) => {
+  return axios
+    .get(
+      `https://pro.openweathermap.org/data/2.5/forecast/hourly?lat=${lat}&lon=${lon}&appid=${weatherbitAccessKey}`
+    )
+    .then((response) => {
+      return response.data;
+    })
+    .catch((error) => {
+      return logBuddy({
+        step: "getWeather",
+        latitude: lat,
+        longitude: lon,
+        error: error,
+        message: "An error was encountered while retrieving your weather data.",
+      });
+    });
+};
 
 /*  @addressString: String - URI Encoded string address. 
     How do I URI encode a string? Call encodeURIComponent(originalString)
     when making the request from the browser.*/
 const getLatLong = (addressString) =>
   // https://positionstack.com/
-  fetch(
-    `http://api.positionstack.com/v1/forward?access_key=${positionStackAccessKey}&query=${addressString}`
-  )
-    .then((response) => response.json())
+  axios
+    .get(
+      `http://api.positionstack.com/v1/forward?access_key=${positionStackAccessKey}&query=${addressString}`
+    )
     .then((response) => {
       try {
-        const { latitude, longitude } = response?.data[0];
+        const latitude = response?.data?.data[0]?.latitude;
+        const longitude = response?.data?.data[0]?.longitude;
         return { latitude, longitude };
       } catch (error) {
-        return {
+        return logBuddy({
+          step: "getLatLong - then",
           error,
           message:
             "An error was encountered while parsing the lattitude and longitude data",
-        };
+          positionStackAccessKey,
+        });
       }
     })
     .catch((error) => {
-      return {
+      return logBuddy({
+        step: "getLatLong - catch",
         error,
         message:
           "An error was encountered while getting the lattitue and longitude data",
-      };
+        positionStackAccessKey,
+      });
     });
 
 /*  @addressString: String - Address String 
