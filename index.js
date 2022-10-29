@@ -4,7 +4,7 @@ const cors = require("cors");
 
 const {
   PORT,
-  weatherbitAccessKeypositionStackAccessKey,
+  weatherbitAccessKey,
   positionStackAccessKey,
 } = require("./Secrets");
 
